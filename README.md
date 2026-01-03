@@ -1,88 +1,100 @@
-# 🚀 Deploy CLI
+<div align="center">
+  <img src="./assets/images/icon.png" width="120" height="120" alt="Deploy CLI Logo" />
+  <h1>🚀 Deploy CLI</h1>
+  <p><b>A professional AI-powered Command Line Interface for the Next Generation of Developers.</b></p>
+  <p>面向下一代开发者的专业级 AI 驱动命令行界面。</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/abdulwasea89/DeployCli?style=social)](https://github.com/abdulwasea89/DeployCli)
+[![Docker Image](https://img.shields.io/badge/docker-ready-skyblue.svg?logo=docker)](./Dockerfile)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](#)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/abdulwasea89/DeployCli/ci.yml?branch=main)](https://github.com/abdulwasea89/DeployCli/actions)
 
-A professional AI-powered Command Line Interface (CLI) built with **Ink**, **React**, and **Groq**. Deploy CLI brings state-of-the-art reasoning models directly to your terminal with a premium visual experience.
+[English](./README.md) | [简体中文](./README_zh-CN.md)
 
-## ✨ Features
-- **🧠 Real-time AI Reasoning**: Powered by `gpt-oss-120b` for deep problem-solving.
-- **🎨 Premium Web Aesthetics**: High-end terminal UI with amber highlights and smooth transitions.
-- **🛡️ Enterprise Grade**: Modular architecture, type safety, and comprehensive testing.
-- **🔌 Plugin System**: Extendable via a modular plugin architecture.
-- **🔐 Secure Access**: Built-in authentication flow for workspace security.
+</div>
 
-## 📂 Project Structure
+---
+
+## 🌟 Overview / 项目概览
+
+**Deploy CLI** is a high-performance terminal assistant that brings state-of-the-art AI reasoning directly to your workflow. Built with a "Terminal First" philosophy, it combines the flexibility of React/Ink with the power of Groq's low-latency inference.
+
+**Deploy CLI** 是一款高性能终端助手，将最先进的 AI 推理能力直接引入您的工作流程。它秉承“终端优先”的理念，融合了 React/Ink 的灵活性与 Groq 的低延迟推理能力。
+
+## ✨ Key Features / 核心特性
+
+- **🧠 Deep Reasoning**: Native support for `gpt-oss-120b` for complex problem solving. (原生支持 `gpt-oss-120b`，助力解决复杂难题。)
+- **🎨 Premium Aesthetics**: Aesthetically pleasing TUI with Amber/Black glassmorphism-inspired design. (精美的 TUI 设计，灵感源自琥珀色与黑色的玻璃拟态风格。)
+- **🔌 Enterprise Modular**: Decoupled architecture for easy extension and plugin development. (解耦的架构设计，支持轻松扩展和插件开发。)
+- **🐳 Container Native**: First-class support for Docker and Docker Compose. (原生支持 Docker 和 Docker Compose，环境无忧。)
+- **🔐 Secure Flow**: Integrated workspace authentication and secure credential handling. (集成的任务空间身份验证和安全凭据管理。)
+
+## 📦 Project Structure / 项目结构
 
 ```text
 .
-├── assets/       # Brand assets and design guidelines
-├── bin/          # Global executable binaries
-├── config/       # Multi-environment configuration
-├── docs/         # API and Architecture documentation
-├── scripts/      # Automation and developer tools
-├── src/          # Source code
-│   ├── components/ # React/Ink UI components
-│   ├── hooks/      # State and logic hooks
-│   ├── services/   # AI and external API services
-│   ├── types/      # TypeScript definitions
-│   └── utils/      # Shared utility functions
-├── tests/        # Unit and integration test suites
-└── ... (Standard config and standard project files)
+├── 📂 assets/       # Brand assets & guidelines (品牌资产)
+├── 📂 bin/          # Executables (二进制可执行文件)
+├── 📂 config/       # Multi-env configs (多环境配置)
+├── 📂 docs/         # Documentation (项目文档)
+├── 📂 scripts/      # Automation tools (自动化脚本)
+├── 📂 src/          # Source Code (源代码)
+│   ├── ⚛️ components/ # UI Elements (UI 组件)
+│   ├── 🎣 hooks/      # Logic hooks (逻辑钩子)
+│   ├── 🛠️ services/   # AI layer (AI 服务层)
+│   └── 🏷️ types/      # Type safety (类型定义)
+├── 📂 tests/        # Test suites (测试套件)
+└── ⚙️ Dockerfile     # Deployment config (部署配置)
 ```
 
-## 🚀 Getting Started
+## 🚀 Quick Start / 快速开始
 
-### Prerequisites
-- Node.js (v20+)
-- npm
-
-### Installation
+### Installation / 安装
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/abdulwasea89/DeployCli.git
-
-# Enter the directory
 cd DeployCli
 
 # Install dependencies
 npm install
 
-# Build/Run
+# Run (Development)
 npm run dev
 ```
 
-### Docker Usage
-If you prefer to run the CLI in a container:
-
-**Using Docker directly:**
+### Docker Usage / 容器使用
 ```bash
-docker build -t deploy-cli .
-docker run -it --env-file .env deploy-cli
-```
-
-**Using Docker Compose:**
-```bash
+# Using Compose
 docker-compose run deploy-cli
 ```
 
-### Environment Setup
-Create a `.env` file in the root:
-```env
-GROQ_API_KEY=your_key_here
-NODE_ENV=development
-```
+## 🛠 Tech Stack / 技术栈
 
-## 📖 Documentation & Community
-- **[Contributing](./CONTRIBUTING.md)**: How to help the project grow.
-- **[Code of Conduct](./CODE_OF_CONDUCT.md)**: Our community standards.
-- **[Changelog](./CHANGELOG.md)**: Track every update and feature.
-- **[Security](./SECURITY.md)**: Report vulnerabilities securely.
-- **[Support](./SUPPORT.md)**: Get help when you need it.
+- [Ink](https://github.com/vadimdemedes/ink) - React for interactive CLIs
+- [Groq](https://groq.com) - Ultra-fast AI inference
+- [Zod](https://zod.dev) - Schema validation
+- [Docker](https://www.docker.com) - Containerization
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+## 🤝 Contributing / 参与贡献
+
+Contributions are extremely welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) to get started.
+
+非常欢迎参与贡献！请查阅我们的 [贡献指南](./CONTRIBUTING.md) 开始。
+
+## 👥 Contributors / 贡献者
+
+<a href="https://github.com/abdulwasea89/DeployCli/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=abdulwasea89/DeployCli" />
+</a>
+
+## 📈 Star History / 星标趋势
+
+[![Star History Chart](https://api.star-history.com/svg?repos=abdulwasea89/DeployCli&type=Date)](https://star-history.com/#abdulwasea89/DeployCli&Date)
 
 ---
-Built with ❤️ by [Abdul Wasea](https://github.com/abdulwasea89)
+
+<div align="center">
+  <p>Built with ❤️ by <a href="https://github.com/abdulwasea89">Abdul Wasea</a></p>
+  <p>Deploy CLI is licensed under the <a href="./LICENSE">MIT License</a>.</p>
+</div>
