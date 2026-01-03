@@ -1,0 +1,31 @@
+{
+  "name": "startup-demo",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/dev.js",
+    "dev": "npx tsx src/source.tsx"
+  },
+  "dependencies": {
+    "@ai-sdk/groq": "^3.0.2",
+    "ai": "^6.0.5",
+    "dotenv": "^17.2.3",
+    "ink": "^6.6.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "path": "^0.12.7",
+    "react": "^19.2.3",
+    "terminal-image": "^4.1.0",
+    "zod": "^4.3.4"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.26.4",
+    "@babel/core": "^7.26.7",
+    "@babel/preset-env": "^7.26.7",
+    "@babel/preset-react": "^7.26.3",
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.2.7",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
