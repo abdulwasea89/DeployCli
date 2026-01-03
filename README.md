@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="./assets/images/icon.png" width="120" height="120" alt="Deploy CLI Logo" />
-  <h1>🚀 Deploy CLI</h1>
+  <h1> Deploy CLI</h1>
   <p><b>A professional AI-powered Command Line Interface for the Next Generation of Developers.</b></p>
   <p>面向下一代开发者的专业级 AI 驱动命令行界面。</p>
 
@@ -95,8 +94,3 @@ Contributions are extremely welcome! Please read our [Contributing Guide](./CONT
 [![Star History Chart](https://api.star-history.com/svg?repos=abdulwasea89/DeployCli&type=date&legend=top-left)](https://www.star-history.com/#abdulwasea89/DeployCli&type=date&legend=top-left)
 
 ---
-
-<div align="center">
-  <p>Built with ❤️ by <a href="https://github.com/abdulwasea89">Abdul Wasea</a></p>
-  <p>Deploy CLI is licensed under the <a href="./LICENSE">MIT License</a>.</p>
-</div>
