@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
-import { Message } from '../types.ts';
+import { Message } from '../types/chat.ts';
 
 interface ChatHistoryProps {
     messages: Message[];

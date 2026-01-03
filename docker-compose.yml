@@ -1,0 +1,13 @@
+services:
+  deploy-cli:
+    build: .
+    container_name: deploy-cli
+    stdin_open: true # Equivalent to -i
+    tty: true # Equivalent to -t
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development

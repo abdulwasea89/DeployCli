@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { streamText } from 'ai';
-import { groq } from '@ai-sdk/groq';
-import { Message } from '../types.ts';
+import { Message } from '../types/chat.ts';
+import { getAIStream } from '../services/aiService.ts';
 
 export const useChat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -36,16 +35,7 @@ export const useChat = () => {
         setIsProcessing(true);
 
         try {
-            const { fullStream } = await streamText({
-                model: groq('openai/gpt-oss-120b'),
-                system: 'You are a helpful AI assistant. Be concise and professional.',
-                messages: (messages.concat(userMsg)).map(m => ({ role: m.role, content: m.content })),
-                providerOptions: {
-                    groq: {
-                        reasoningFormat: 'parsed'
-                    }
-                }
-            });
+            const { fullStream } = await getAIStream([...messages, userMsg]);
 
             // Add placeholder for the AI response
             setMessages(prev => [...prev, { role: 'assistant', content: '', reasoning: '' }]);

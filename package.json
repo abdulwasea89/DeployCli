@@ -2,6 +2,9 @@
   "name": "startup-demo",
   "version": "1.0.0",
   "type": "module",
+  "bin": {
+    "deploy-cli": "./bin/deploy.js"
+  },
   "scripts": {
     "start": "node scripts/dev.js",
     "dev": "npx tsx src/source.tsx"

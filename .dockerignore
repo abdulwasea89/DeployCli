@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+dist
+.env
+.git
+.dockerignore
+Dockerfile
+docker-compose.yaml
+tests
+docs
+assets
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
+CODE_OF_CONDUCT.md
+SECURITY.md
+SUPPORT.md
