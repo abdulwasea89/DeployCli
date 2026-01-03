@@ -90,7 +90,9 @@ Contributions are extremely welcome! Please read our [Contributing Guide](./CONT
 
 ## 📈 Star History / 星标趋势
 
-[![Star History Chart](https://api.star-history.com/svg?repos=abdulwasea89/DeployCli&type=Date)](https://star-history.com/#abdulwasea89/DeployCli&Date)
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=abdulwasea89/DeployCli&type=date&legend=top-left)](https://www.star-history.com/#abdulwasea89/DeployCli&type=date&legend=top-left)
 
 ---
 
