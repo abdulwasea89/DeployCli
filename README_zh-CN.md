@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="./assets/images/icon.png" width="120" height="120" alt="Deploy CLI Logo" />
   <h1>🚀 Deploy CLI</h1>
   <p><b>面向下一代开发者的专业级 AI 驱动命令行界面。</b></p>
 

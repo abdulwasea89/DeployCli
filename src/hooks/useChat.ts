@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Message } from '../types/chat.ts';
 import { getAIStream } from '../services/aiService.ts';
+import fs from 'fs';
+import path from 'path';
 
 export const useChat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -13,11 +15,41 @@ export const useChat = () => {
         setMessages(prev => [...prev, { role: 'assistant', content: 'Successfully authenticated. Reasoning model (GPT-OSS) is now active.' }]);
     };
 
-    const sendMessage = async (value: string) => {
+    const sendMessage = React.useCallback(async (value: string) => {
         if (!value.trim() || isProcessing) return;
 
-        if (value.trim() === '/login') {
+        const command = value.trim();
+
+        if (command === '/login') {
             handleLogin();
+            return;
+        }
+
+        if (command === '/clear' || command === '/reset') {
+            setMessages([]);
+            return;
+        }
+
+        if (command === '/exit') {
+            process.exit(0);
+        }
+
+        if (command === '/help') {
+            setMessages(prev => [
+                ...prev,
+                { role: 'user', content: value },
+                { role: 'assistant', content: 'Available commands:\n/login - Sign in\n/clear - Clear chat\n/exit - Exit app\n/help - Show this message\n/history - View history\n/model - Switch model' }
+            ]);
+            return;
+        }
+
+        // Handle other client-side commands stub
+        if (command.startsWith('/') && !command.includes(' ')) {
+            setMessages(prev => [
+                ...prev,
+                { role: 'user', content: value },
+                { role: 'assistant', content: `Command '${command}' not recognized or not implemented yet.` }
+            ]);
             return;
         }
 
@@ -35,7 +67,29 @@ export const useChat = () => {
         setIsProcessing(true);
 
         try {
-            const { fullStream } = await getAIStream([...messages, userMsg]);
+            // Parse for @files
+            const fileTokens = value.match(/@(\S+)/g) || [];
+            let contextualMessages = [...messages, userMsg];
+
+            if (fileTokens.length > 0) {
+                const fileContexts = fileTokens.map(token => {
+                    const fileName = token.slice(1);
+                    try {
+                        const content = fs.readFileSync(path.join(process.cwd(), fileName), 'utf-8');
+                        return `--- FILE: ${fileName} ---\n${content}\n--- END FILE ---`;
+                    } catch (e) {
+                        return `--- FILE: ${fileName} (Error: Could not read file) ---`;
+                    }
+                }).join('\n\n');
+
+                contextualMessages = [
+                    { role: 'system', content: `The user has provided the following file context:\n\n${fileContexts}` },
+                    ...messages,
+                    userMsg
+                ];
+            }
+
+            const { fullStream } = await getAIStream(contextualMessages);
 
             // Add placeholder for the AI response
             setMessages(prev => [...prev, { role: 'assistant', content: '', reasoning: '' }]);
@@ -66,7 +120,7 @@ export const useChat = () => {
         } finally {
             setIsProcessing(false);
         }
-    };
+    }, [isProcessing, isLoggedIn, messages]);
 
     return {
         messages,
