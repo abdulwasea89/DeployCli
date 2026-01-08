@@ -29,6 +29,14 @@ I built Deploy CLI because I wanted an AI assistant that feels like a natural ex
 
 My goal is to create something that not only solves real developer problems but also demonstrates how AI can be deeply integrated into our daily development workflows. Every feature in Deploy CLI was born from my own frustrations and the desire to build something I'd want to use every day.
 
+## 我是谁，为什么构建这个项目
+
+你好！我是 Abdul Wasea，一名充满热情的软件开发者，我的大部分时间都在终端中度过。多年来，我一直对强大的 AI 工具与我主要工作的命令行环境之间的脱节感到沮丧。
+
+我构建 Deploy CLI 是因为我想要一个感觉像是终端工作流程自然延伸的 AI 助手。不再需要在浏览器标签页之间切换、复制代码片段，或在向 AI 寻求帮助时丢失上下文。这个工具生活在我生活的地方 - 在终端中。
+
+我的目标是创建一个不仅能解决真正开发者问题的东西，还要展示 AI 如何深度集成到我们的日常开发工作流程中。Deploy CLI 中的每个功能都源于我自己的挫败感，以及构建一个我每天都想使用的工具的愿望。
+
 ## Key Features
 
 ### AI & Reasoning
