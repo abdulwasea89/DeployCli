@@ -1,9 +1,22 @@
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: database
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts:/usr/src/app/scripts
+
   deploy-cli:
     build: .
     container_name: deploy-cli
-    stdin_open: true # Equivalent to -i
-    tty: true # Equivalent to -t
+    stdin_open: true
+    tty: true
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
@@ -11,3 +24,9 @@ services:
       - .env
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgres://user:password@db:5432/database
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
