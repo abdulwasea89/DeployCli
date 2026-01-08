@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🚀 Deploy CLI</h1>
+  <h1>Deploy CLI</h1>
   <p><b>A professional AI-powered Command Line Interface for the Next Generation of Developers.</b></p>
   <p>面向下一代开发者的专业级 AI 驱动命令行界面。</p>
 
@@ -17,71 +17,77 @@
 
 ---
 
-## 🌟 Overview / 项目概览
+## Overview
 
 **Deploy CLI** is a high-performance terminal assistant that brings state-of-the-art AI reasoning directly to your workflow. Built with a "Terminal First" philosophy, it combines the flexibility of React/Ink with the power of Groq's low-latency inference, featuring secure authentication, file context inclusion, and a beautiful glassmorphism-inspired interface.
 
-**Deploy CLI** 是一款高性能终端助手，将最先进的 AI 推理能力直接引入您的工作流程。它秉承"终端优先"的理念，融合了 React/Ink 的灵活性与 Groq 的低延迟推理能力，支持安全身份验证、文件上下文包含和精美的玻璃拟态界面设计。
+## Who am I and why I built this
 
-## ✨ Key Features / 核心特性
+Hi there! I'm Abdul Wasea, a passionate software developer who spends most of my day in the terminal. For years, I've been frustrated with the disconnect between powerful AI tools and the command-line environment where I do most of my work.
 
-### 🤖 AI & Reasoning
-- **🧠 Deep Reasoning**: Native support for `gpt-oss-120b` for complex problem solving with real-time reasoning display
-- **📄 File Context**: Include files in conversations using `@filename` syntax for context-aware responses
-- **💬 Streaming Responses**: Real-time text and reasoning streaming for responsive interactions
-- **🔄 Session Persistence**: Automatic session recovery and chat history preservation
+I built Deploy CLI because I wanted an AI assistant that feels like a natural extension of my terminal workflow. No more switching between browser tabs, copying code snippets, or losing context when asking AI for help. This tool lives where I live - in the terminal.
 
-### 🎨 User Experience
-- **✨ Premium Aesthetics**: Aesthetically pleasing TUI with Amber/Black glassmorphism-inspired design
-- **⌨️ Interactive Commands**: Rich command system (`/login`, `/clear`, `/help`, `/logout`, `/exit`)
-- **🌐 Multi-language**: Full English and Chinese language support
-- **🎯 Terminal First**: Optimized for developers who live in the terminal
+My goal is to create something that not only solves real developer problems but also demonstrates how AI can be deeply integrated into our daily development workflows. Every feature in Deploy CLI was born from my own frustrations and the desire to build something I'd want to use every day.
 
-### 🔧 Architecture
-- **🔌 Enterprise Modular**: Decoupled architecture for easy extension and plugin development
-- **🐳 Container Native**: First-class support for Docker and Docker Compose with complete containerization
-- **🔐 Secure Authentication**: Integrated OAuth-based authentication with secure token management
-- **⚡ High Performance**: Built with modern Node.js, TypeScript, and optimized for low-latency responses
+## Key Features
 
-## 📦 Project Structure / 项目结构
+### AI & Reasoning
+- **Deep Reasoning**: Native support for `gpt-oss-120b` for complex problem solving with real-time reasoning display
+- **File Context**: Include files in conversations using `@filename` syntax for context-aware responses
+- **Streaming Responses**: Real-time text and reasoning streaming for responsive interactions
+- **Session Persistence**: Automatic session recovery and chat history preservation
+
+### User Experience
+- **Premium Aesthetics**: Aesthetically pleasing TUI with Amber/Black glassmorphism-inspired design
+- **Interactive Commands**: Rich command system (`/login`, `/clear`, `/help`, `/logout`, `/exit`)
+- **Multi-language**: Full English and Chinese language support
+- **Terminal First**: Optimized for developers who live in the terminal
+
+### Architecture
+- **Enterprise Modular**: Decoupled architecture for easy extension and plugin development
+- **Container Native**: First-class support for Docker and Docker Compose with complete containerization
+- **Secure Authentication**: Integrated OAuth-based authentication with secure token management
+- **High Performance**: Built with modern Node.js, TypeScript, and optimized for low-latency responses
+
+## Project Structure
 
 ```text
 .
-├── 📂 assets/           # Brand assets & design guidelines (品牌资产与设计指南)
-├── 📂 bin/              # Executable binaries (可执行文件)
-├── 📂 config/           # Multi-environment configurations (多环境配置)
+├── assets/           # Brand assets & design guidelines
+├── bin/              # Executable binaries
+├── config/           # Multi-environment configurations
 │   ├── constants.ts     # App constants and configuration
 │   └── environments/    # Environment-specific configs
-├── 📂 docs/             # Technical documentation (技术文档)
-├── 📂 scripts/          # Automation and database scripts (自动化脚本)
-├── 📂 src/              # Main application source code (核心源代码)
-│   ├── ⚛️ components/   # React/Ink UI components (UI 组件)
+├── docs/             # Technical documentation
+├── scripts/          # Automation and database scripts
+├── src/              # Main application source code
+│   ├── components/   # React/Ink UI components
 │   │   ├── ChatHistory.tsx  # Message display component
 │   │   ├── ChatInput.tsx    # Interactive input component
 │   │   └── Header.tsx       # App header with branding
-│   ├── 🎣 hooks/        # React hooks for state management (状态管理钩子)
+│   ├── hooks/        # React hooks for state management
 │   │   └── useChat.ts       # Main chat logic and state
-│   ├── 🛠️ services/     # Business logic and API integrations (服务层)
+│   ├── services/     # Business logic and API integrations
 │   │   ├── aiService.ts     # Groq AI integration
 │   │   └── auth/            # Authentication services
-│   ├── 🏷️ types/        # TypeScript type definitions (类型定义)
-│   ├── 📡 server/       # Backend API server (后端服务器)
-│   ├── 🔧 lib/          # Shared utilities and libraries (共享库)
-│   ├── ⚙️ middleware/    # Request middleware (中间件)
-│   ├── 📋 schemas/      # Data validation schemas (数据验证)
-│   └── 🎨 themes/       # UI themes and styling (主题样式)
-├── 🌐 web/              # Next.js authentication portal (认证门户)
-├── 🧪 tests/            # Test suites (测试套件)
+│   ├── types/        # TypeScript type definitions
+│   ├── server/       # Backend API server
+│   ├── lib/          # Shared utilities and libraries
+│   ├── middleware/    # Request middleware
+│   ├── schemas/      # Data validation schemas
+│   └── themes/       # UI themes and styling
+├── web/              # Next.js authentication portal
+├── tests/            # Test suites
 │   ├── integration/     # Integration tests
 │   └── unit/           # Unit tests
-├── 🐳 Dockerfile        # Container build configuration (容器配置)
-├── 🐳 docker-compose.yml # Multi-service orchestration (多服务编排)
-└── 📋 package.json     # Node.js dependencies and scripts
+├── Dockerfile        # Container build configuration
+├── docker-compose.yml # Multi-service orchestration
+└── package.json     # Node.js dependencies and scripts
 ```
 
-## 🚀 Quick Start / 快速开始
+## Quick Start
 
-### Prerequisites / 系统要求
+### Prerequisites
 - **Node.js 20+**
 - **npm or yarn**
 - **Docker & Docker Compose** (recommended for full setup)
@@ -137,9 +143,9 @@ docker-compose up --build
 docker-compose run --rm deploy-cli
 ```
 
-## 📖 Usage Guide / 使用指南
+## Usage Guide
 
-### Authentication / 身份验证
+### Authentication
 ```bash
 # Start the CLI
 npm run dev
@@ -149,7 +155,7 @@ npm run dev
 ```
 This will open your browser for authentication via the web portal at `http://localhost:3000`.
 
-### Chat Commands / 聊天命令
+### Chat Commands
 ```
 /help          # Show available commands
 /login         # Authenticate with the service
@@ -158,13 +164,13 @@ This will open your browser for authentication via the web portal at `http://loc
 /exit          # Exit the application
 ```
 
-### File Context / 文件上下文
+### File Context
 Include files in your conversations for context-aware AI responses:
 ```
 Tell me how to optimize this code @src/components/ChatInput.tsx
 ```
 
-## 🔧 API Reference / API 参考
+## API Reference
 
 ### Authentication Endpoints / 认证端点
 
@@ -198,31 +204,31 @@ Poll authentication status.
 #### POST `/custom/auth/validate`
 Validate session token.
 
-## 🛠 Tech Stack / 技术栈
+## Tech Stack
 
-### Frontend & CLI / 前端与命令行
+### Frontend & CLI
 - **[Ink](https://github.com/vadimdemedes/ink)** - React for interactive CLIs
 - **[React 19](https://react.dev/)** - UI framework
 - **[Next.js 16](https://nextjs.org/)** - Web authentication portal
 
-### Backend & Services / 后端与服务
+### Backend & Services
 - **[Hono](https://hono.dev/)** - Lightweight API framework
 - **[Better Auth](https://better-auth.com/)** - Authentication library
 - **[PostgreSQL](https://postgresql.org/)** - Primary database
 - **[Redis](https://redis.io/)** - Session storage (optional)
 
-### AI & Data Processing / AI 与数据处理
+### AI & Data Processing
 - **[Groq](https://groq.com)** - Ultra-fast AI inference
 - **[Vercel AI SDK](https://vercel.com/docs/ai)** - AI integration framework
 - **[Zod](https://zod.dev)** - Schema validation
 
-### Development & Deployment / 开发与部署
+### Development & Deployment
 - **[TypeScript 5.9+](https://www.typescriptlang.org/)** - Type safety
 - **[Docker](https://www.docker.com/)** - Containerization
 - **[ESLint](https://eslint.org/)** - Code linting
 - **[tsx](https://tsx.is/)** - TypeScript execution
 
-## 🧪 Testing / 测试
+## Testing
 
 ```bash
 # Run unit tests
@@ -235,31 +241,31 @@ npm run test:integration
 npm run test:coverage
 ```
 
-## 🤝 Contributing / 参与贡献
+## Contributing
 
 Contributions are extremely welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) to get started.
 
-### Development Workflow / 开发工作流
+### Development Workflow
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
 3. Make your changes and add tests
 4. Run tests: `npm test`
 5. Submit a pull request
 
-### Code Standards / 代码规范
+### Code Standards
 - **TypeScript**: Strict type checking enabled
 - **ESLint**: Automated code linting and formatting
 - **Pre-commit hooks**: Automated testing and linting
 - **Conventional commits**: Standardized commit messages
 
-## 📚 Documentation / 文档
+## Documentation
 
 - **[Architecture](./docs/architecture.md)** - System design and component overview
 - **[API Documentation](./docs/api/)** - Backend API specifications
 - **[Contributing Guide](./CONTRIBUTING.md)** - Development guidelines
 - **[Brand Guidelines](./assets/brand_guidelines.md)** - Design and branding standards
 
-## 🐛 Troubleshooting / 问题排查
+## Troubleshooting
 
 ### Common Issues / 常见问题
 
@@ -292,24 +298,24 @@ docker system prune -a
 docker-compose build --no-cache
 ```
 
-## 📄 License / 许可证
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
-## 👥 Contributors / 贡献者
+## Contributors
 
 <a href="https://github.com/abdulwasea89/DeployCli/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=abdulwasea89/DeployCli" />
 </a>
 
-## 🙏 Acknowledgments / 致谢
+## Acknowledgments
 
 - **Groq** for providing ultra-fast AI inference
 - **Vercel** for the AI SDK and Next.js
 - **Ink** for the amazing CLI framework
 - **Better Auth** for seamless authentication
 
-## 📈 Star History / 星标趋势
+## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=abdulwasea89/DeployCli&type=date&legend=top-left)](https://www.star-history.com/#abdulwasea89/DeployCli&type=date&legend=top-left)
 
