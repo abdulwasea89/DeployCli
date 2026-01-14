@@ -33,46 +33,93 @@
 - **🌐 多语言**: 完整的英语和中文语言支持
 - **🎯 终端优先**: 专为生活在终端中的开发者优化
 
-### 🔧 架构设计
-- **🔌 企业级模块化**: 解耦架构，便于扩展和插件开发
-- **🐳 原生容器化**: 对 Docker 和 Docker Compose 的原生支持，完整的容器化方案
-- **🔐 安全认证**: 集成基于 OAuth 的身份验证和安全令牌管理
-- **⚡ 高性能**: 使用现代 Node.js、TypeScript 构建，针对低延迟响应优化
+## 架构
 
-## 📦 项目结构
+Deploy CLI 采用解耦的多组件架构设计，以确保可扩展性和可维护性。它由三大部分组成：CLI、用于身份验证的后端服务器和用于登录的 Web 门户。
+
+```mermaid
+graph TD
+    subgraph 用户交互
+        A[用户的终端]
+    end
+
+    subgraph 系统组件
+        B[Deploy CLI (Ink/React)]
+        C[后端服务器 (Hono)]
+        D[Web 门户 (Next.js)]
+        E[PostgreSQL 数据库]
+    end
+
+    subgraph 外部服务
+        F[Groq AI API]
+        G[Better Auth]
+    end
+
+    A -- 进行交互 --> B
+    B -- "/login" 命令 --> C
+    C -- 生成 URL --> B
+    B -- 在浏览器中打开 URL --> D
+    D -- 通过...处理 OAuth --> G
+    G -- 返回会话至 --> D
+    D -- 将会话存储在 --> E
+    C -- 轮询会话 --> E
+    C -- 返回会话至 --> B
+    B -- 向...发出经身份验证的请求 --> F
+```
+
+### 组件
+
+-   **CLI 应用程序 (`src/`)**: 使用 **Ink** 和 **React** 构建，是用户与 AI 互动的主界面。它负责管理用户界面、处理用户输入，并与后端服务通信。
+-   **后端服务器 (`src/server/`)**: 一个轻量级的 **Hono** 服务器，负责处理身份验证流程。它与 Web 门户和数据库通信，以验证用户会话。
+-   **Web 门户 (`web/`)**: 一个 **Next.js** 应用程序，提供一个基于 Web 的界面，供用户通过 **Better Auth** 登录和验证身份。
+-   **数据库 (`docker-compose.yml`)**: 一个 **PostgreSQL** 数据库，用于存储用户会话和其他应用程序数据。
+
+### 身份验证流程
+
+1.  用户在 CLI 中运行 `/login` 命令。
+2.  CLI 向后端服务器发送请求，以启动身份验证过程。
+3.  后端服务器生成一个唯一的验证码和 Web 门户的 URL，并将其发送回 CLI。
+4.  CLI 在用户的默认浏览器中打开该 URL。
+5.  用户通过 Web 门户登录，该门户使用 **Better Auth** 处理 OAuth 流程。
+6.  身份验证成功后，Web 门户将用户的会话令牌存储在 PostgreSQL 数据库中。
+7.  同时，后端服务器轮询数据库以检查会话令牌。
+8.  一旦找到令牌，后端服务器会将其发送到 CLI，完成身份验证过程。
+9.  然后，CLI 可以向 **Groq AI API** 发出经身份验证的请求。
+
+## 项目结构
 
 ```text
 .
-├── 📂 assets/           # 品牌资产与设计指南
-├── 📂 bin/              # 可执行文件
-├── 📂 config/           # 多环境配置
-│   ├── constants.ts     # 应用常量和配置
-│   └── environments/    # 环境特定配置
-├── 📂 docs/             # 技术文档
-├── 📂 scripts/          # 自动化和数据库脚本
-├── 📂 src/              # 核心应用源代码
-│   ├── ⚛️ components/   # React/Ink UI 组件
-│   │   ├── ChatHistory.tsx  # 消息显示组件
-│   │   ├── ChatInput.tsx    # 交互输入组件
-│   │   └── Header.tsx       # 应用标题和品牌
-│   ├── 🎣 hooks/        # React 状态管理钩子
-│   │   └── useChat.ts       # 主要聊天逻辑和状态
-│   ├── 🛠️ services/     # 业务逻辑和 API 集成
-│   │   ├── aiService.ts     # Groq AI 集成
-│   │   └── auth/            # 认证服务
-│   ├── 🏷️ types/        # TypeScript 类型定义
-│   ├── 📡 server/       # 后端 API 服务器
-│   ├── 🔧 lib/          # 共享工具库
-│   ├── ⚙️ middleware/    # 请求中间件
-│   ├── 📋 schemas/      # 数据验证模式
-│   └── 🎨 themes/       # UI 主题和样式
-├── 🌐 web/              # Next.js 认证门户
-├── 🧪 tests/            # 测试套件
-│   ├── integration/     # 集成测试
-│   └── unit/           # 单元测试
-├── 🐳 Dockerfile        # 容器构建配置
-├── 🐳 docker-compose.yml # 多服务编排
-└── 📋 package.json     # Node.js 依赖和脚本
+├── assets/           # 品牌资产和设计指南
+├── bin/              # CLI 应用程序的可执行二进制文件
+├── config/           # 应用程序的多环境配置
+│   ├── constants.ts     # 应用程序常量和共享配置值
+│   └── environments/    # 特定于环境的配置（例如，开发、生产）
+├── docs/             # 技术文档、指南和架构图
+├── scripts/          # 用于数据库管理等任务的自动化脚本
+├── src/              # CLI 的主要应用程序源代码
+│   ├── components/   # 用于终端接口的可重用 React/Ink UI 组件
+│   │   ├── ChatHistory.tsx  # 用于显示消息历史记录的组件
+│   │   ├── ChatInput.tsx    # 用于用户输入和命令处理的组件
+│   │   └── Header.tsx       # 应用程序页眉和品牌的组件
+│   ├── hooks/        # 用于状态管理和逻辑的自定义 React 钩子
+│   │   └── useChat.ts       # 用于管理聊天状态和 API 交互的核心钩子
+│   ├── services/     # 业务逻辑和与外部 API 的集成
+│   │   ├── aiService.ts     # 用于与 Groq AI API 交互的服务
+│   │   └── auth/            # 用于处理用户身份验证的服务
+│   ├── types/        # TypeScript 类型定义和接口
+│   ├── server/       # 用于处理身份验证的后端 API 服务器 (Hono)
+│   ├── lib/          # 共享实用程序、库和辅助函数
+│   ├── middleware/   # 后端服务器请求的中间件
+│   ├── schemas/      # 使用 Zod 的数据验证模式
+│   └── themes/       # UI 主题、样式和颜色定义
+├── web/              # 用于身份验证 Web 门户的 Next.js 应用程序
+├── tests/            # 应用程序的自动化测试
+│   ├── integration/     # 组合组件的集成测试
+│   └── unit/           # 单个组件和函数的单元测试
+├── Dockerfile        # 用于构建 Docker 容器的配置
+├── docker-compose.yml # 用于多服务编排的 Docker Compose 配置
+└── package.json     # Node.js 项目元数据、依赖项和脚本
 ```
 
 ## 🚀 快速开始

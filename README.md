@@ -51,46 +51,93 @@ My goal is to create something that not only solves real developer problems but 
 - **Multi-language**: Full English and Chinese language support
 - **Terminal First**: Optimized for developers who live in the terminal
 
-### Architecture
-- **Enterprise Modular**: Decoupled architecture for easy extension and plugin development
-- **Container Native**: First-class support for Docker and Docker Compose with complete containerization
-- **Secure Authentication**: Integrated OAuth-based authentication with secure token management
-- **High Performance**: Built with modern Node.js, TypeScript, and optimized for low-latency responses
+## Architecture
+
+Deploy CLI is designed with a decoupled, multi-component architecture to ensure scalability and maintainability. It consists of three main parts: the CLI, a backend server for authentication, and a web-based portal for login.
+
+```mermaid
+graph TD
+    subgraph User Interaction
+        A[User's Terminal]
+    end
+
+    subgraph System Components
+        B[Deploy CLI (Ink/React)]
+        C[Backend Server (Hono)]
+        D[Web Portal (Next.js)]
+        E[PostgreSQL Database]
+    end
+
+    subgraph External Services
+        F[Groq AI API]
+        G[Better Auth]
+    end
+
+    A -- Interacts with --> B
+    B -- "/login" command --> C
+    C -- Generates URL --> B
+    B -- Opens URL in browser --> D
+    D -- Handles OAuth via --> G
+    G -- Returns session to --> D
+    D -- Stores session in --> E
+    C -- Polls for session --> E
+    C -- Returns session to --> B
+    B -- Makes authenticated requests to --> F
+```
+
+### Components
+
+-   **CLI Application (`src/`)**: Built with **Ink** and **React**, this is the main interface where users interact with the AI. It manages the UI, handles user input, and communicates with the backend services.
+-   **Backend Server (`src/server/`)**: A lightweight **Hono** server responsible for handling the authentication flow. It communicates with the web portal and the database to verify user sessions.
+-   **Web Portal (`web/`)**: A **Next.js** application that provides a web-based interface for users to log in and authenticate via **Better Auth**.
+-   **Database (`docker-compose.yml`)**: A **PostgreSQL** database used to store user sessions and other application data.
+
+### Authentication Flow
+
+1.  The user runs the `/login` command in the CLI.
+2.  The CLI sends a request to the backend server to initiate the authentication process.
+3.  The backend server generates a unique authentication code and a URL for the web portal, which it sends back to the CLI.
+4.  The CLI opens the URL in the user's default browser.
+5.  The user logs in through the web portal, which uses **Better Auth** to handle the OAuth flow.
+6.  Once authenticated, the web portal stores the user's session token in the PostgreSQL database.
+7.  Meanwhile, the backend server polls the database to check for the session token.
+8.  Once the token is found, the backend server sends it to the CLI, completing the authentication process.
+9.  The CLI can then make authenticated requests to the **Groq AI API**.
 
 ## Project Structure
 
 ```text
 .
 ├── assets/           # Brand assets & design guidelines
-├── bin/              # Executable binaries
-├── config/           # Multi-environment configurations
-│   ├── constants.ts     # App constants and configuration
-│   └── environments/    # Environment-specific configs
-├── docs/             # Technical documentation
-├── scripts/          # Automation and database scripts
-├── src/              # Main application source code
-│   ├── components/   # React/Ink UI components
-│   │   ├── ChatHistory.tsx  # Message display component
-│   │   ├── ChatInput.tsx    # Interactive input component
-│   │   └── Header.tsx       # App header with branding
-│   ├── hooks/        # React hooks for state management
-│   │   └── useChat.ts       # Main chat logic and state
-│   ├── services/     # Business logic and API integrations
-│   │   ├── aiService.ts     # Groq AI integration
-│   │   └── auth/            # Authentication services
-│   ├── types/        # TypeScript type definitions
-│   ├── server/       # Backend API server
-│   ├── lib/          # Shared utilities and libraries
-│   ├── middleware/    # Request middleware
-│   ├── schemas/      # Data validation schemas
-│   └── themes/       # UI themes and styling
-├── web/              # Next.js authentication portal
-├── tests/            # Test suites
-│   ├── integration/     # Integration tests
-│   └── unit/           # Unit tests
-├── Dockerfile        # Container build configuration
-├── docker-compose.yml # Multi-service orchestration
-└── package.json     # Node.js dependencies and scripts
+├── bin/              # Executable binaries for the CLI application
+├── config/           # Multi-environment configurations for the application
+│   ├── constants.ts     # App constants and shared configuration values
+│   └── environments/    # Environment-specific configs (e.g., development, production)
+├── docs/             # Technical documentation, guides, and architectural diagrams
+├── scripts/          # Automation scripts for tasks like database management
+├── src/              # Main application source code for the CLI
+│   ├── components/   # Reusable React/Ink UI components for the terminal interface
+│   │   ├── ChatHistory.tsx  # Component for displaying the message history
+│   │   ├── ChatInput.tsx    # Component for user input and command handling
+│   │   └── Header.tsx       # Component for the application header and branding
+│   ├── hooks/        # Custom React hooks for state management and logic
+│   │   └── useChat.ts       # Core hook for managing chat state and API interactions
+│   ├── services/     # Business logic and integrations with external APIs
+│   │   ├── aiService.ts     # Service for interacting with the Groq AI API
+│   │   └── auth/            # Services for handling user authentication
+│   ├── types/        # TypeScript type definitions and interfaces
+│   ├── server/       # Backend API server (Hono) for handling authentication
+│   ├── lib/          # Shared utilities, libraries, and helper functions
+│   ├── middleware/   # Middleware for the backend server requests
+│   ├── schemas/      # Data validation schemas using Zod
+│   └── themes/       # UI themes, styles, and color definitions
+├── web/              # Next.js application for the authentication web portal
+├── tests/            # Automated tests for the application
+│   ├── integration/     # Integration tests for combined components
+│   └── unit/           # Unit tests for individual components and functions
+├── Dockerfile        # Configuration for building the Docker container
+├── docker-compose.yml # Docker Compose configuration for multi-service orchestration
+└── package.json     # Node.js project metadata, dependencies, and scripts
 ```
 
 ## Quick Start
