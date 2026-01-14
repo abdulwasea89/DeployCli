@@ -1,7 +1,7 @@
-<div align="center">
-  <h1>Deploy CLI</h1>
-  <p><b>A professional AI-powered Command Line Interface for the Next Generation of Developers.</b></p>
-  <p>面向下一代开发者的专业级 AI 驱动命令行界面。</p>
+# Deploy CLI
+
+A professional AI-powered Command Line Interface for the Next Generation of Developers.  
+面向下一代开发者的专业级 AI 驱动命令行界面。
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/abdulwasea89/DeployCli?style=social)](https://github.com/abdulwasea89/DeployCli)
@@ -13,29 +13,33 @@
 
 [English](./README.md) | [简体中文](./README_zh-CN.md)
 
-</div>
-
 ---
 
 ## Overview
 
 **Deploy CLI** is a high-performance terminal assistant that brings state-of-the-art AI reasoning directly to your workflow. Built with a "Terminal First" philosophy, it combines the flexibility of React/Ink with the power of Groq's low-latency inference, featuring secure authentication, file context inclusion, and a beautiful glassmorphism-inspired interface.
 
+---
+
 ## Who am I and why I built this
 
 Hi there! I'm Abdul Wasea, a passionate software developer who spends most of my day in the terminal. For years, I've been frustrated with the disconnect between powerful AI tools and the command-line environment where I do most of my work.
 
-I built Deploy CLI because I wanted an AI assistant that feels like a natural extension of my terminal workflow. No more switching between browser tabs, copying code snippets, or losing context when asking AI for help. This tool lives where I live - in the terminal.
+I built Deploy CLI because I wanted an AI assistant that feels like a natural extension of my terminal workflow. No more switching between browser tabs, copying code snippets, or losing context when asking AI for help. This tool lives where I live — in the terminal.
 
 My goal is to create something that not only solves real developer problems but also demonstrates how AI can be deeply integrated into our daily development workflows. Every feature in Deploy CLI was born from my own frustrations and the desire to build something I'd want to use every day.
+
+---
 
 ## 我是谁，为什么构建这个项目
 
 你好！我是 Abdul Wasea，一名充满热情的软件开发者，我的大部分时间都在终端中度过。多年来，我一直对强大的 AI 工具与我主要工作的命令行环境之间的脱节感到沮丧。
 
-我构建 Deploy CLI 是因为我想要一个感觉像是终端工作流程自然延伸的 AI 助手。不再需要在浏览器标签页之间切换、复制代码片段，或在向 AI 寻求帮助时丢失上下文。这个工具生活在我生活的地方 - 在终端中。
+我构建 Deploy CLI 是因为我想要一个感觉像是终端工作流程自然延伸的 AI 助手。不再需要在浏览器标签页之间切换、复制代码片段，或在向 AI 寻求帮助时丢失上下文。这个工具生活在我生活的地方 — 在终端中。
 
 我的目标是创建一个不仅能解决真正开发者问题的东西，还要展示 AI 如何深度集成到我们的日常开发工作流程中。Deploy CLI 中的每个功能都源于我自己的挫败感，以及构建一个我每天都想使用的工具的愿望。
+
+---
 
 ## Key Features
 
@@ -51,40 +55,40 @@ My goal is to create something that not only solves real developer problems but 
 - **Multi-language**: Full English and Chinese language support
 - **Terminal First**: Optimized for developers who live in the terminal
 
+---
+
 ## Architecture
 
 Deploy CLI is designed with a decoupled, multi-component architecture to ensure scalability and maintainability. It consists of three main parts: the CLI, a backend server for authentication, and a web-based portal for login.
-
 ```mermaid
 graph TD
-    subgraph User Interaction
-        A[User's Terminal]
+    subgraph "User Interaction"
+        A["User's Terminal"]
     end
 
-    subgraph System Components
-        B[Deploy CLI (Ink/React)]
-        C[Backend Server (Hono)]
-        D[Web Portal (Next.js)]
-        E[PostgreSQL Database]
+    subgraph "System Components"
+        B["Deploy CLI (Ink / React)"]
+        C["Backend Server (Hono)"]
+        D["Web Portal (Next.js)"]
+        E["PostgreSQL Database"]
     end
 
-    subgraph External Services
-        F[Groq AI API]
-        G[Better Auth]
+    subgraph "External Services"
+        F["Groq AI API"]
+        G["Better Auth"]
     end
 
-    A -- Interacts with --> B
-    B -- "/login" command --> C
-    C -- Generates URL --> B
-    B -- Opens URL in browser --> D
-    D -- Handles OAuth via --> G
-    G -- Returns session to --> D
-    D -- Stores session in --> E
-    C -- Polls for session --> E
-    C -- Returns session to --> B
-    B -- Makes authenticated requests to --> F
+    A --> B
+    B -->|"login command"| C
+    C -->|"Generates URL"| B
+    B -->|"Opens browser"| D
+    D -->|"OAuth"| G
+    G --> D
+    D --> E
+    C -->|"Polls session"| E
+    C -->|"Returns session"| B
+    B -->|"Authenticated requests"| F
 ```
-
 ### Components
 
 -   **CLI Application (`src/`)**: Built with **Ink** and **React**, this is the main interface where users interact with the AI. It manages the UI, handles user input, and communicates with the backend services.
