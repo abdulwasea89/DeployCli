@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ isLoggedIn, user }) => {
                 <Box borderStyle="single" borderLeft={true} borderRight={false} borderTop={false} borderBottom={false} borderColor="dim" paddingX={1} />
                 <Box flexDirection="column" flexGrow={2} flexBasis={0} paddingLeft={1}>
                     <Text color="yellow">Status</Text>
-                    <Text>{isLoggedIn ? "✅ Authenticated" : "❌ Locked"}</Text>
+                    <Text>{isLoggedIn ? "Authenticated" : "Locked"}</Text>
                     <Box borderStyle="single" borderTop={true} borderLeft={false} borderRight={false} borderBottom={false} borderColor="dim" marginY={1} />
                     <Text color="yellow">Recent activity</Text>
                     <Text>No recent activity</Text>
