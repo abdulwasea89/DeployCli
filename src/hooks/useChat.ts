@@ -4,7 +4,7 @@ import { getAIStream } from '../services/aiService.ts';
 import fs from 'fs';
 import path from 'path';
 import open from 'open';
-import { sessionStorage } from '../services/session/sessionStorage.ts';
+import { authManager } from '../services/auth/AuthManager.ts';
 
 export const useChat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -13,41 +13,34 @@ export const useChat = () => {
     const [user, setUser] = useState('');
     const [sessionToken, setSessionToken] = useState<string | null>(null);
 
-    // Auto-login on mount if session exists
     useEffect(() => {
         const checkSession = async () => {
-            const savedSession = sessionStorage.loadSession();
+            const savedSession = await authManager.checkAuth();
             if (!savedSession) return;
 
-            try {
-                const response = await fetch('http://localhost:3001/custom/auth/validate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionToken: savedSession.sessionToken })
-                });
-
-                const data = await response.json();
-                if (data.valid) {
-                    setIsLoggedIn(true);
-                    setUser(data.user.name || data.user.email);
-                    setSessionToken(savedSession.sessionToken);
-                    setMessages([
-                        {
-                            role: 'assistant',
-                            content: `🎉 Welcome back, ${data.user.name || data.user.email}!\n\nYou are already authenticated from a previous session.\nReasoning model (GPT-OSS) is ready to use.\n\nType your message or use /help for available commands.`
-                        }
-                    ]);
-                } else {
-                    // Session expired, clear it
-                    sessionStorage.clearSession();
+            setIsLoggedIn(true);
+            setUser(savedSession.userName || savedSession.userEmail);
+            setSessionToken(savedSession.sessionToken);
+            setMessages([
+                {
+                    role: 'assistant',
+                    content: `🎉 Welcome back, ${savedSession.userName || savedSession.userEmail}!\n\nYou are already authenticated from a previous session.\nReasoning model (GPT-OSS) is ready to use.\n\nType your message or use /help for available commands.`
                 }
-            } catch (error) {
-                console.error('Session validation failed:', error);
-                sessionStorage.clearSession();
-            }
+            ]);
         };
 
         checkSession();
+
+        // Background health check every 10 minutes
+        const healthCheckInternal = setInterval(async () => {
+            const valid = await authManager.checkAuth();
+            if (!valid && isLoggedIn) {
+                setIsLoggedIn(false);
+                setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Your session has expired. Please type /login to reconnect.' }]);
+            }
+        }, 10 * 60 * 1000);
+
+        return () => clearInterval(healthCheckInternal);
     }, []);
 
     const handleLogin = () => {
@@ -73,18 +66,7 @@ export const useChat = () => {
             setMessages(prev => [...prev, { role: 'user', content: '/login' }, { role: 'assistant', content: 'Initiating authentication... Please check your browser.' }]);
 
             try {
-                const response = await fetch("http://localhost:3001/custom/auth/initiate", { method: "POST" }
-
-                );
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Server returned ${response.status}: ${errorText.substring(0, 100)}`);
-                }
-
-                const { code, url } = await response.json();
-
-                console.log(code, url)
+                const { code, url } = await authManager.initiateLogin();
 
                 // Try to open browser but also show the link
                 try {
@@ -95,40 +77,15 @@ export const useChat = () => {
                 }
 
                 const pollInterval = setInterval(async () => {
-                    try {
-                        const pollResp = await fetch(`http://localhost:3001/custom/auth/poll?code=${code}`);
-                        const pollData = await pollResp.json();
-
-                        if (pollData.authenticated) {
-                            clearInterval(pollInterval);
-
-                            // Fetch user details and session token
-                            const userResp = await fetch(`http://localhost:3001/api/auth/get-session`, {
-                                headers: { 'Cookie': `better-auth.session_token=${pollData.sessionToken}` }
-                            });
-                            const userData = await userResp.json();
-
-                            setIsLoggedIn(true);
-                            setUser(userData.user?.name || userData.user?.email || pollData.userId);
-                            setSessionToken(pollData.sessionToken || '');
-
-                            // Save session to disk
-                            if (pollData.sessionToken && userData.user) {
-                                sessionStorage.saveSession(
-                                    pollData.sessionToken,
-                                    userData.user.id,
-                                    userData.user.name || '',
-                                    userData.user.email || ''
-                                );
-                            }
-
-                            setMessages(prev => [...prev, { role: 'assistant', content: 'Successfully authenticated! Reasoning model (GPT-OSS) is now active.' }]);
-                        }
-                    } catch (err) {
-                        // Silently fail polling errors
+                    const session = await authManager.login(code);
+                    if (session) {
+                        clearInterval(pollInterval);
+                        setIsLoggedIn(true);
+                        setUser(session.userName || session.userEmail);
+                        setSessionToken(session.sessionToken);
+                        setMessages(prev => [...prev, { role: 'assistant', content: 'Successfully authenticated! Reasoning model (GPT-OSS) is now active.' }]);
                     }
                 }, 3000);
-
             } catch (error: any) {
                 setMessages(prev => [...prev, { role: 'assistant', content: `Authentication failed: ${error.message}` }]);
             }
@@ -141,7 +98,7 @@ export const useChat = () => {
         }
 
         if (command === '/logout') {
-            sessionStorage.clearSession();
+            await authManager.logout();
             setIsLoggedIn(false);
             setUser('');
             setSessionToken(null);

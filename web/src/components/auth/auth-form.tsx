@@ -30,9 +30,10 @@ export function AuthForm({ code, onAuthSuccess }: { code?: string, onAuthSuccess
             setError(signUpError.message || "Failed to sign up");
             setIsLoading(false);
         } else if (data) {
-            // Use safe navigation and fallback for token
-            const sessionToken = (data as any).session?.token || (data as any).token || "";
-            onAuthSuccess(data.user.id, sessionToken);
+            console.log("Sign up successful, data:", JSON.stringify(data));
+            const token = (data as any).session?.token || (data as any).token || (data as any).sessionToken || "";
+            if (!token) console.warn("No token found in sign up response");
+            onAuthSuccess(data.user.id, token);
         }
     };
 
@@ -48,9 +49,10 @@ export function AuthForm({ code, onAuthSuccess }: { code?: string, onAuthSuccess
             setError(signInError.message || "Failed to sign in");
             setIsLoading(false);
         } else if (data) {
-            // Use safe navigation and fallback for token
-            const sessionToken = (data as any).session?.token || (data as any).token || "";
-            onAuthSuccess(data.user.id, sessionToken);
+            console.log("Sign in successful, data:", JSON.stringify(data));
+            const token = (data as any).session?.token || (data as any).token || (data as any).sessionToken || "";
+            if (!token) console.warn("No token found in sign in response");
+            onAuthSuccess(data.user.id, token);
         }
     };
 

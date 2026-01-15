@@ -135,40 +135,43 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({ onSubmit, isLog
     return (
         <Box flexDirection="column" marginTop={1}>
             {isDropdownVisible && (
-                <Box flexDirection="column" borderStyle="round" borderColor="cyan" paddingX={1} marginBottom={0}>
-                    {/* Render Header */}
-                    <Box marginBottom={1} borderStyle="single" borderBottom borderColor="dim">
-                        <Text bold color="cyan">
-                            {showFileDropdown ? ' 🔍 FILE SELECTOR ' : ' ⚡ COMMANDS '}
+                <Box flexDirection="column" paddingX={1} marginBottom={1}>
+                    {/* Minimalist Header */}
+                    <Box marginBottom={0} borderStyle="single" borderBottom borderColor="dim">
+                        <Text dimColor>
+                            {showFileDropdown ? 'SELECT FILE' : 'COMMANDS'}
                         </Text>
                     </Box>
 
-                    {/* Render Commands */}
-                    {showCommandDropdown && filteredCommands.map((cmd, index) => (
-                        <Box key={cmd.label}>
-                            <Text color={index === selectedIndex ? 'yellow' : 'white'}>
-                                {index === selectedIndex ? '❯ ' : '  '}
-                                <Text bold={index === selectedIndex}>{cmd.label}</Text>
-                                <Text dimColor> - {cmd.description}</Text>
-                            </Text>
-                        </Box>
-                    ))}
+                    {/* Content */}
+                    <Box flexDirection="column" marginTop={1}>
+                        {showCommandDropdown && filteredCommands.map((cmd, index) => (
+                            <Box key={cmd.label}>
+                                <Text color={index === selectedIndex ? 'cyan' : 'white'}>
+                                    {index === selectedIndex ? '→ ' : '  '}
+                                    <Text bold={index === selectedIndex}>{cmd.label}</Text>
+                                    <Text dimColor> {cmd.description}</Text>
+                                </Text>
+                            </Box>
+                        ))}
 
-                    {/* Render Files */}
-                    {showFileDropdown && filteredFiles.slice(0, 10).map((file, index) => (
-                        <Box key={file}>
-                            <Text color={index === selectedIndex ? 'yellow' : 'white'}>
-                                {index === selectedIndex ? '❯ ' : '  '}
-                                <Text>{file.endsWith('/') ? '📁 ' : '📄 '}</Text>
-                                <Text bold={index === selectedIndex}>{file}</Text>
-                            </Text>
-                        </Box>
-                    ))}
+                        {showFileDropdown && filteredFiles.slice(0, 10).map((file, index) => (
+                            <Box key={file}>
+                                <Text color={index === selectedIndex ? 'cyan' : 'white'}>
+                                    {index === selectedIndex ? '→ ' : '  '}
+                                    <Box marginRight={1}>
+                                        <Text dimColor>{file.endsWith('/') ? 'dir' : 'file'}</Text>
+                                    </Box>
+                                    <Text bold={index === selectedIndex}>{file}</Text>
+                                </Text>
+                            </Box>
+                        ))}
+                    </Box>
 
-                    {/* Render Footer/Hints */}
-                    <Box marginTop={1} paddingTop={0} borderStyle="single" borderTop borderColor="dim">
+                    {/* Subtle Hint */}
+                    <Box marginTop={1}>
                         <Text dimColor italic>
-                            {' '}↑↓ navigate • Tab/Enter select • Esc close{' '}
+                            ↑↓ to navigate • Tab to select
                         </Text>
                     </Box>
                 </Box>

@@ -44,12 +44,14 @@ My goal is to create something that not only solves real developer problems but 
 ## Key Features
 
 ### AI & Reasoning
+
 - **Deep Reasoning**: Native support for `gpt-oss-120b` for complex problem solving with real-time reasoning display
 - **File Context**: Include files in conversations using `@filename` syntax for context-aware responses
 - **Streaming Responses**: Real-time text and reasoning streaming for responsive interactions
 - **Session Persistence**: Automatic session recovery and chat history preservation
 
 ### User Experience
+
 - **Premium Aesthetics**: Aesthetically pleasing TUI with Amber/Black glassmorphism-inspired design
 - **Interactive Commands**: Rich command system (`/login`, `/clear`, `/help`, `/logout`, `/exit`)
 - **Multi-language**: Full English and Chinese language support
@@ -59,7 +61,19 @@ My goal is to create something that not only solves real developer problems but 
 
 ## Architecture
 
-Deploy CLI is designed with a decoupled, multi-component architecture to ensure scalability and maintainability. It consists of three main parts: the CLI, a backend server for authentication, and a web-based portal for login.
+Deploy CLI is designed with a decoupled, multi-component architecture to ensure scalability and maintainability.
+
+### Design Pillars
+
+- **Enterprise Modular**: Decoupled architecture for easy extension and plugin development
+- **Container Native**: First-class support for Docker and Docker Compose with complete containerization
+- **Secure Authentication**: Integrated OAuth-based authentication with secure token management
+- **High Performance**: Built with modern Node.js, TypeScript, and optimized for low-latency responses
+
+### System Overview
+
+It consists of three main parts: the CLI, a backend server for authentication, and a web-based portal for login.
+
 ```mermaid
 graph TD
     subgraph "User Interaction"
@@ -89,12 +103,13 @@ graph TD
     C -->|"Returns session"| B
     B -->|"Authenticated requests"| F
 ```
+
 ### Components
 
--   **CLI Application (`src/`)**: Built with **Ink** and **React**, this is the main interface where users interact with the AI. It manages the UI, handles user input, and communicates with the backend services.
--   **Backend Server (`src/server/`)**: A lightweight **Hono** server responsible for handling the authentication flow. It communicates with the web portal and the database to verify user sessions.
--   **Web Portal (`web/`)**: A **Next.js** application that provides a web-based interface for users to log in and authenticate via **Better Auth**.
--   **Database (`docker-compose.yml`)**: A **PostgreSQL** database used to store user sessions and other application data.
+- **CLI Application (`src/`)**: Built with **Ink** and **React**, this is the main interface where users interact with the AI. It manages the UI, handles user input, and communicates with the backend services.
+- **Backend Server (`src/server/`)**: A lightweight **Hono** server responsible for handling the authentication flow. It communicates with the web portal and the database to verify user sessions.
+- **Web Portal (`web/`)**: A **Next.js** application that provides a web-based interface for users to log in and authenticate via **Better Auth**.
+- **Database (`docker-compose.yml`)**: A **PostgreSQL** database used to store user sessions and other application data.
 
 ### Authentication Flow
 
@@ -147,6 +162,7 @@ graph TD
 ## Quick Start
 
 ### Prerequisites
+
 - **Node.js 20+**
 - **npm or yarn**
 - **Docker & Docker Compose** (recommended for full setup)
@@ -154,6 +170,7 @@ graph TD
 ### Local Development / 本地开发
 
 #### 1. Clone and Setup / 克隆项目
+
 ```bash
 # Clone the repository
 git clone https://github.com/abdulwasea89/DeployCli.git
@@ -164,6 +181,7 @@ npm install
 ```
 
 #### 2. Environment Configuration / 环境配置
+
 ```bash
 # Copy environment template
 cp .env.example .env
@@ -173,6 +191,7 @@ cp .env.example .env
 ```
 
 #### 3. Database Setup / 数据库设置
+
 ```bash
 # Start PostgreSQL database
 docker-compose up -d db
@@ -182,6 +201,7 @@ npm run db:init
 ```
 
 #### 4. Start the Application / 启动应用
+
 ```bash
 # Terminal 1: Start the backend API server
 npm run server
@@ -193,7 +213,10 @@ cd web && npm install && npm run dev
 npm run dev
 ```
 
+For a more detailed guide on setting up the development environment, see the [Development Setup Guide](./docs/development.md).
+
 ### Docker Deployment / Docker 部署
+
 ```bash
 # Build and run with Docker Compose
 docker-compose up --build
@@ -205,6 +228,7 @@ docker-compose run --rm deploy-cli
 ## Usage Guide
 
 ### Authentication
+
 ```bash
 # Start the CLI
 npm run dev
@@ -212,9 +236,11 @@ npm run dev
 # In the CLI, type:
 /login
 ```
+
 This will open your browser for authentication via the web portal at `http://localhost:3000`.
 
 ### Chat Commands
+
 ```
 /help          # Show available commands
 /login         # Authenticate with the service
@@ -224,7 +250,9 @@ This will open your browser for authentication via the web portal at `http://loc
 ```
 
 ### File Context
+
 Include files in your conversations for context-aware AI responses:
+
 ```
 Tell me how to optimize this code @src/components/ChatInput.tsx
 ```
@@ -234,10 +262,13 @@ Tell me how to optimize this code @src/components/ChatInput.tsx
 ### Authentication Endpoints / 认证端点
 
 #### POST `/api/auth/*`
+
 Better Auth OAuth endpoints for user authentication.
 
 #### POST `/custom/auth/initiate`
+
 Initiate authentication flow.
+
 ```json
 // Response
 {
@@ -247,7 +278,9 @@ Initiate authentication flow.
 ```
 
 #### POST `/custom/auth/verify`
+
 Verify authentication code.
+
 ```json
 // Request
 {
@@ -258,30 +291,36 @@ Verify authentication code.
 ```
 
 #### GET `/custom/auth/poll?code={code}`
+
 Poll authentication status.
 
 #### POST `/custom/auth/validate`
+
 Validate session token.
 
 ## Tech Stack
 
 ### Frontend & CLI
+
 - **[Ink](https://github.com/vadimdemedes/ink)** - React for interactive CLIs
 - **[React 19](https://react.dev/)** - UI framework
 - **[Next.js 16](https://nextjs.org/)** - Web authentication portal
 
 ### Backend & Services
+
 - **[Hono](https://hono.dev/)** - Lightweight API framework
 - **[Better Auth](https://better-auth.com/)** - Authentication library
 - **[PostgreSQL](https://postgresql.org/)** - Primary database
 - **[Redis](https://redis.io/)** - Session storage (optional)
 
 ### AI & Data Processing
+
 - **[Groq](https://groq.com)** - Ultra-fast AI inference
 - **[Vercel AI SDK](https://vercel.com/docs/ai)** - AI integration framework
 - **[Zod](https://zod.dev)** - Schema validation
 
 ### Development & Deployment
+
 - **[TypeScript 5.9+](https://www.typescriptlang.org/)** - Type safety
 - **[Docker](https://www.docker.com/)** - Containerization
 - **[ESLint](https://eslint.org/)** - Code linting
@@ -305,6 +344,7 @@ npm run test:coverage
 Contributions are extremely welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) to get started.
 
 ### Development Workflow
+
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
 3. Make your changes and add tests
@@ -312,6 +352,7 @@ Contributions are extremely welcome! Please read our [Contributing Guide](./CONT
 5. Submit a pull request
 
 ### Code Standards
+
 - **TypeScript**: Strict type checking enabled
 - **ESLint**: Automated code linting and formatting
 - **Pre-commit hooks**: Automated testing and linting
@@ -319,6 +360,7 @@ Contributions are extremely welcome! Please read our [Contributing Guide](./CONT
 
 ## Documentation
 
+- **[Development Setup](./docs/development.md)** - Detailed guide for setting up the dev environment
 - **[Architecture](./docs/architecture.md)** - System design and component overview
 - **[API Documentation](./docs/api/)** - Backend API specifications
 - **[Contributing Guide](./CONTRIBUTING.md)** - Development guidelines
@@ -329,6 +371,7 @@ Contributions are extremely welcome! Please read our [Contributing Guide](./CONT
 ### Common Issues / 常见问题
 
 **CLI won't start / CLI 无法启动**
+
 ```bash
 # Check Node.js version
 node --version  # Should be 20+
@@ -339,6 +382,7 @@ npm install
 ```
 
 **Authentication fails / 身份验证失败**
+
 ```bash
 # Ensure backend server is running
 npm run server
@@ -349,6 +393,7 @@ docker-compose logs db
 ```
 
 **Docker build fails / Docker 构建失败**
+
 ```bash
 # Clean Docker cache
 docker system prune -a

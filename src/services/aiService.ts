@@ -4,7 +4,7 @@ import { Message } from '../types/chat.ts';
 import { APP_CONFIG } from '../../config/constants.ts';
 
 export const getAIStream = async (messages: Message[]) => {
-    const lastMessage = messages[messages.length - 1];
+    const lastMessage = messages[messages.length - 1]
     const history = messages.slice(0, -1);
 
     return streamText({

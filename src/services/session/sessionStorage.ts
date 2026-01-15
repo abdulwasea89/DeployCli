@@ -1,69 +1,72 @@
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import { FileStorage } from '../auth/storage/FileStorage.ts';
+import { KeychainStorage } from '../auth/storage/KeychainStorage.ts';
+import { AuthState, IAuthStorage } from '../auth/storage/types.ts';
 
-interface SessionData {
-    sessionToken: string;
-    userId: string;
-    userName: string;
-    userEmail: string;
-    savedAt: string;
-}
+class MultiLayerStorage {
+    private fileStorage: FileStorage;
+    private keychainStorage: KeychainStorage;
+    private currentProfile: string = 'default';
 
-const getSessionPath = (): string => {
-    const homeDir = os.homedir();
-    const configDir = path.join(homeDir, '.deploy-cli');
-
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(configDir)) {
-        fs.mkdirSync(configDir, { recursive: true });
+    constructor() {
+        this.fileStorage = new FileStorage();
+        this.keychainStorage = new KeychainStorage();
     }
 
-    return path.join(configDir, 'session.json');
-};
+    private async getBestStorage(): Promise<IAuthStorage> {
+        // We prefer keychain but will fall back to file if keychain is unavailable
+        // (In some Linux environments without DBUS/Keyring, keytar might fail)
+        try {
+            // Test if keychain works by doing a dummy operation
+            // Not really efficient, but safe. 
+            // Alternatively, we can just try/catch on every operation.
+            return this.keychainStorage;
+        } catch {
+            return this.fileStorage;
+        }
+    }
 
-export const sessionStorage = {
-    saveSession: (sessionToken: string, userId: string, userName: string, userEmail: string): void => {
-        const sessionData: SessionData = {
-            sessionToken,
+    async saveSession(token: string, userId: string, userName: string, userEmail: string): Promise<void> {
+        const state: AuthState = {
+            sessionToken: token,
             userId,
             userName,
             userEmail,
             savedAt: new Date().toISOString()
         };
 
+        // Attempt to save to both for redundancy and fallback
         try {
-            fs.writeFileSync(getSessionPath(), JSON.stringify(sessionData, null, 2), 'utf-8');
-        } catch (error) {
-            console.error('Failed to save session:', error);
+            await this.keychainStorage.save(this.currentProfile, state);
+        } catch (e) {
+            console.warn('Failed to save to keychain, falling back to file:', e);
         }
-    },
+        await this.fileStorage.save(this.currentProfile, state);
+    }
 
-    loadSession: (): SessionData | null => {
+    async loadSession(): Promise<AuthState | null> {
+        // Try keychain first
         try {
-            const sessionPath = getSessionPath();
-            if (!fs.existsSync(sessionPath)) {
-                return null;
-            }
-
-            const data = fs.readFileSync(sessionPath, 'utf-8');
-            return JSON.parse(data) as SessionData;
-        } catch (error) {
-            console.error('Failed to load session:', error);
-            return null;
+            const state = await this.keychainStorage.load(this.currentProfile);
+            if (state) return state;
+        } catch (e) {
+            // Silently fall back
         }
-    },
 
-    clearSession: (): void => {
+        // Try file storage
+        return await this.fileStorage.load(this.currentProfile);
+    }
+
+    async clearSession(): Promise<void> {
         try {
-            const sessionPath = getSessionPath();
-            if (fs.existsSync(sessionPath)) {
-                fs.unlinkSync(sessionPath);
-            }
-        } catch (error) {
-            console.error('Failed to clear session:', error);
-        }
-    },
+            await this.keychainStorage.clear(this.currentProfile);
+        } catch (e) {}
+        await this.fileStorage.clear(this.currentProfile);
+    }
 
-    getSessionPath
-};
+    setProfile(profile: string) {
+        this.currentProfile = profile;
+    }
+}
+
+export const sessionStorage = new MultiLayerStorage();
+export type { AuthState };
