@@ -5,6 +5,10 @@ import fs from 'fs';
 import path from 'path';
 import open from 'open';
 import { authManager } from '../services/auth/AuthManager.ts';
+import { historyService } from '../services/history/HistoryService.ts';
+import { APP_CONFIG } from '../../config/constants.ts';
+import { v4 as uuidv4 } from 'uuid';
+import { ToonService } from '../utils/ToonService.ts';
 
 export const useChat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -12,6 +16,8 @@ export const useChat = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState('');
     const [sessionToken, setSessionToken] = useState<string | null>(null);
+    const [selectedModel, setSelectedModel] = useState(APP_CONFIG.DEFAULT_MODEL);
+    const [currentSessionId, setCurrentSessionId] = useState<string>(uuidv4());
 
     useEffect(() => {
         const checkSession = async () => {
@@ -114,8 +120,54 @@ export const useChat = () => {
             setMessages(prev => [
                 ...prev,
                 { role: 'user', content: value },
-                { role: 'assistant', content: 'Available commands:\n/login - Sign in\n/clear - Clear chat\n/exit - Exit app\n/help - Show this message\n/history - View history\n/model - Switch model' }
+                { role: 'assistant', content: 'Available commands:\n/login - Sign in\n/clear - Clear chat\n/exit - Exit app\n/help - Show this message\n/history - View sessions\n/session <id> - Load session\n/model [name] - View/Switch model' }
             ]);
+            return;
+        }
+
+        if (command === '/history') {
+            const sessions = await historyService.listSessions();
+            if (sessions.length === 0) {
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: 'No saved sessions found.' }]);
+                return;
+            }
+
+            const historyText = sessions.map(s => `ID: ${s.id.slice(0, 8)} | ${s.name} (${new Date(s.date).toLocaleDateString()})`).join('\n');
+            setMessages(prev => [...prev,
+            { role: 'user', content: value },
+            { role: 'assistant', content: `Saved Sessions:\n${historyText}\n\nType /session <id> to load.` }
+            ]);
+            return;
+        }
+
+        if (command.startsWith('/session ')) {
+            const sessionIdPart = command.split(' ')[1];
+            const sessions = await historyService.listSessions();
+            const sessionMeta = sessions.find(s => s.id.startsWith(sessionIdPart));
+
+            if (!sessionMeta) {
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `Session '${sessionIdPart}' not found.` }]);
+                return;
+            }
+
+            const fullSession = await historyService.loadSession(sessionMeta.id);
+            if (fullSession) {
+                setMessages(fullSession.messages);
+                setCurrentSessionId(fullSession.id);
+                setMessages(prev => [...prev, { role: 'assistant', content: `Loaded session: ${fullSession.name}` }]);
+            }
+            return;
+        }
+
+        if (command === '/model') {
+            setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `Current model: ${selectedModel}\n\nTo switch, type /model <name>` }]);
+            return;
+        }
+
+        if (command.startsWith('/model ')) {
+            const newModel = command.split(' ')[1];
+            setSelectedModel(newModel);
+            setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `Switched to model: ${newModel}` }]);
             return;
         }
 
@@ -148,47 +200,95 @@ export const useChat = () => {
             let contextualMessages = [...messages, userMsg];
 
             if (fileTokens.length > 0) {
-                const fileContexts = fileTokens.map(token => {
+                const filesData = fileTokens.map(token => {
                     const fileName = token.slice(1);
+                    const fullPath = path.join(process.cwd(), fileName);
                     try {
-                        const content = fs.readFileSync(path.join(process.cwd(), fileName), 'utf-8');
-                        return `--- FILE: ${fileName} ---\n${content}\n--- END FILE ---`;
+                        const stats = fs.statSync(fullPath);
+                        const isLarge = stats.size > 50 * 1024; // 50KB threshold
+
+                        if (isLarge) {
+                            return { 
+                                name: fileName, 
+                                size: stats.size, 
+                                large: true,
+                                instruction: 'This file is large. Use tools to peek at its content.' 
+                            };
+                        }
+
+                        const content = fs.readFileSync(fullPath, 'utf-8');
+                        return { name: fileName, content };
                     } catch (e) {
-                        return `--- FILE: ${fileName} (Error: Could not read file) ---`;
+                        return { name: fileName, error: 'Could not read file' };
                     }
-                }).join('\n\n');
+                });
+
+                const fileToon = ToonService.toToon({ files: filesData });
 
                 contextualMessages = [
-                    { role: 'system', content: `The user has provided the following file context:\n\n${fileContexts}` },
+                    { role: 'system', content: `The user has provided the following file context in TOON format:\n\n${fileToon}` },
                     ...messages,
                     userMsg
                 ];
             }
 
-            const { fullStream } = await getAIStream(contextualMessages);
+            const { fullStream } = await getAIStream(contextualMessages, selectedModel);
 
             // Add placeholder for the AI response
             setMessages(prev => [...prev, { role: 'assistant', content: '', reasoning: '' }]);
 
             for await (const part of fullStream) {
-                if (part.type === 'reasoning-delta') {
-                    setMessages(prev => {
-                        const next = [...prev];
-                        const last = next[next.length - 1];
-                        if (last && last.role === 'assistant') {
-                            last.reasoning = (last.reasoning || '') + part.text;
-                        }
-                        return next;
-                    });
-                } else if (part.type === 'text-delta') {
-                    setMessages(prev => {
-                        const next = [...prev];
-                        const last = next[next.length - 1];
-                        if (last && last.role === 'assistant') {
-                            last.content = (last.content || '') + part.text;
-                        }
-                        return next;
-                    });
+                switch (part.type) {
+                    case 'reasoning-delta':
+                        setMessages(prev => {
+                            const next = [...prev];
+                            const last = next[next.length - 1];
+                            if (last && last.role === 'assistant') {
+                                last.reasoning = (last.reasoning || '') + part.text;
+                            }
+                            return next;
+                        });
+                        break;
+                    case 'text-delta':
+                        setMessages(prev => {
+                            const next = [...prev];
+                            const last = next[next.length - 1];
+                            if (last && last.role === 'assistant') {
+                                last.content = (last.content || '') + part.text;
+                            }
+                            return next;
+                        });
+                        break;
+                    case 'tool-call':
+                        setMessages(prev => {
+                            const next = [...prev];
+                            const last = next[next.length - 1];
+                            if (last && last.role === 'assistant') {
+                                const toolPart = part as any;
+                                const toolArgs = toolPart.args || toolPart.input;
+                                const toolInfo = `\n\n[🛠️ Tool Call: ${toolPart.toolName}]\n> Arguments: ${JSON.stringify(toolArgs)}\n`;
+                                last.content = (last.content || '') + toolInfo;
+                            }
+                            return next;
+                        });
+                        break;
+                    case 'tool-result':
+                        setMessages(prev => {
+                            const next = [...prev];
+                            const last = next[next.length - 1];
+                            if (last && last.role === 'assistant') {
+                                const toolPart = part as any;
+                                // Try multiple possible property names for the result
+                                const rawResult = toolPart.result ?? toolPart.output ?? toolPart.content ?? toolPart.data;
+                                const result = typeof rawResult === 'string' 
+                                    ? (rawResult.length > 500 ? rawResult.slice(0, 497) + '...' : rawResult)
+                                    : JSON.stringify(rawResult, null, 2);
+                                const resultInfo = `\n[✅ Tool Result: ${toolPart.toolName}]\n\`\`\`\n${result}\n\`\`\`\n`;
+                                last.content = (last.content || '') + resultInfo;
+                            }
+                            return next;
+                        });
+                        break;
                 }
             }
         } catch (error: any) {
@@ -196,7 +296,22 @@ export const useChat = () => {
         } finally {
             setIsProcessing(false);
         }
-    }, [isProcessing, isLoggedIn, messages]);
+    }, [isProcessing, isLoggedIn, messages, selectedModel]);
+
+    // Auto-save session
+    useEffect(() => {
+        if (messages.length > 0) {
+            const firstMsg = messages.find(m => m.role === 'user')?.content || 'New Chat';
+            const name = firstMsg.slice(0, 30) + (firstMsg.length > 30 ? '...' : '');
+
+            historyService.saveSession({
+                id: currentSessionId,
+                name: name,
+                date: new Date().toISOString(),
+                messages: messages
+            });
+        }
+    }, [messages, currentSessionId]);
 
     return {
         messages,

@@ -159,9 +159,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({ onSubmit, isLog
                             <Box key={file}>
                                 <Text color={index === selectedIndex ? 'cyan' : 'white'}>
                                     {index === selectedIndex ? '→ ' : '  '}
-                                    <Box marginRight={1}>
-                                        <Text dimColor>{file.endsWith('/') ? 'dir' : 'file'}</Text>
-                                    </Box>
+                                    <Text dimColor>({file.endsWith('/') ? 'dir' : 'file'}) </Text>
                                     <Text bold={index === selectedIndex}>{file}</Text>
                                 </Text>
                             </Box>
