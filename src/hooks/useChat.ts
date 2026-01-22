@@ -9,6 +9,9 @@ import { historyService } from '../services/history/HistoryService.ts';
 import { APP_CONFIG } from '../../config/constants.ts';
 import { v4 as uuidv4 } from 'uuid';
 import { ToonService } from '../utils/ToonService.ts';
+import { metrics } from '../services/metrics.ts';
+import { fileHistoryService } from '../services/FileHistoryService.ts';
+import { toolRegistry } from '../services/tools/ToolRegistry.ts';
 
 export const useChat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -120,7 +123,39 @@ export const useChat = () => {
             setMessages(prev => [
                 ...prev,
                 { role: 'user', content: value },
-                { role: 'assistant', content: 'Available commands:\n/login - Sign in\n/clear - Clear chat\n/exit - Exit app\n/help - Show this message\n/history - View sessions\n/session <id> - Load session\n/model [name] - View/Switch model' }
+                { role: 'assistant', content: `📚 **Available Commands**
+
+**Session**
+/login - Sign in to your account
+/logout - Sign out
+/clear - Clear chat history
+/exit - Exit application
+
+**Files**
+/view <file> - View file with line numbers
+/ls [path] - List directory contents
+/search <pattern> - Search in files
+
+**Git**
+/status - Show git status
+/diff [file] - Show git diff
+
+**Tools**
+/init - Generate AGENTS.md for project
+/metrics - Show session stats
+/history - View past sessions
+/session <id> - Load session
+/model [name] - View/switch model` }
+            ]);
+            return;
+        }
+
+        if (command === '/metrics') {
+            const summary = metrics.getSummary();
+            setMessages(prev => [
+                ...prev,
+                { role: 'user', content: value },
+                { role: 'assistant', content: summary }
             ]);
             return;
         }
@@ -164,10 +199,139 @@ export const useChat = () => {
             return;
         }
 
+        if (command === '/undo') {
+            const restoredPath = fileHistoryService.undo();
+            setMessages(prev => [
+                ...prev,
+                { role: 'user', content: value },
+                { role: 'assistant', content: restoredPath 
+                    ? `↩️ Successfully undid changes to: \`${restoredPath}\``
+                    : `⚠️ No more changes to undo.` }
+            ]);
+            return;
+        }
+
+        if (command === '/redo') {
+            const restoredPath = fileHistoryService.redo();
+            setMessages(prev => [
+                ...prev,
+                { role: 'user', content: value },
+                { role: 'assistant', content: restoredPath 
+                    ? `↪️ Successfully redid changes to: \`${restoredPath}\``
+                    : `⚠️ No more changes to redo.` }
+            ]);
+            return;
+        }
+
         if (command.startsWith('/model ')) {
             const newModel = command.split(' ')[1];
             setSelectedModel(newModel);
             setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `Switched to model: ${newModel}` }]);
+            return;
+        }
+
+        // /view <file> - View file with line numbers
+        if (command.startsWith('/view ')) {
+            const filePath = command.slice(6).trim();
+            try {
+                const fullPath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
+                if (!fs.existsSync(fullPath)) {
+                    setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `❌ File not found: ${filePath}` }]);
+                    return;
+                }
+                const content = fs.readFileSync(fullPath, 'utf-8');
+                const lines = content.split('\n');
+                const numbered = lines.map((line, i) => `${String(i + 1).padStart(4, ' ')} │ ${line}`).join('\n');
+                const preview = numbered.length > 3000 ? numbered.slice(0, 3000) + '\n... (truncated)' : numbered;
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `📄 **${filePath}** (${lines.length} lines)\n\`\`\`\n${preview}\n\`\`\`` }]);
+            } catch (e: any) {
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `❌ Error: ${e.message}` }]);
+            }
+            return;
+        }
+
+        // /ls [path] - List directory
+        if (command === '/ls' || command.startsWith('/ls ')) {
+            const dirPath = command.length > 3 ? command.slice(4).trim() : '.';
+            try {
+                const { execSync } = await import('child_process');
+                const output = execSync(`ls -la "${dirPath}"`, { encoding: 'utf-8', cwd: process.cwd() });
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `📁 **${dirPath}**\n\`\`\`\n${output}\`\`\`` }]);
+            } catch (e: any) {
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `❌ Error: ${e.message}` }]);
+            }
+            return;
+        }
+
+        // /search <pattern> - Search files with grep
+        if (command.startsWith('/search ')) {
+            const pattern = command.slice(8).trim();
+            if (!pattern) {
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: 'Usage: /search <pattern>' }]);
+                return;
+            }
+            try {
+                const { execSync } = await import('child_process');
+                const output = execSync(`grep -rn --include="*.ts" --include="*.tsx" --include="*.js" --include="*.json" --include="*.md" "${pattern}" . 2>/dev/null | head -50`, { 
+                    encoding: 'utf-8', 
+                    cwd: process.cwd(),
+                    maxBuffer: 10 * 1024 * 1024
+                });
+                const result = output.trim() || 'No matches found.';
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `🔍 Search: "${pattern}"\n\`\`\`\n${result}\n\`\`\`` }]);
+            } catch (e: any) {
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `No matches found for "${pattern}"` }]);
+            }
+            return;
+        }
+
+        // /status - Git status
+        if (command === '/status') {
+            try {
+                const { execSync } = await import('child_process');
+                const status = execSync('git status --short', { encoding: 'utf-8', cwd: process.cwd() });
+                const branch = execSync('git branch --show-current', { encoding: 'utf-8', cwd: process.cwd() }).trim();
+                const result = status.trim() || 'Working tree clean';
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `📊 Git Status (${branch})\n\`\`\`\n${result}\n\`\`\`` }]);
+            } catch (e: any) {
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `❌ Not a git repository or git not available.` }]);
+            }
+            return;
+        }
+
+        // /init - Generate AGENTS.md
+        if (command === '/init') {
+            setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: '🔄 Scanning project structure to generate AGENTS.md...' }]);
+            try {
+                const { execSync } = await import('child_process');
+                const files = execSync('find . -type f -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.json" | head -30', { encoding: 'utf-8', cwd: process.cwd() });
+                const pkgPath = path.join(process.cwd(), 'package.json');
+                let projectName = 'Project';
+                if (fs.existsSync(pkgPath)) {
+                    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+                    projectName = pkg.name || 'Project';
+                }
+                const agentsContent = `# ${projectName}\n\nThis project uses Deploy CLI for AI-assisted development.\n\n## Project Structure\n\n\`\`\`\n${files}\`\`\`\n\n## Code Standards\n\n- Use TypeScript with strict mode\n- Follow existing code patterns\n- Test changes before committing\n\n## Commands\n\n- \`npm run dev\` - Start development\n- \`npm test\` - Run tests\n`;
+                fs.writeFileSync(path.join(process.cwd(), 'AGENTS.md'), agentsContent, 'utf-8');
+                setMessages(prev => [...prev, { role: 'assistant', content: '✅ Created AGENTS.md with project context.' }]);
+            } catch (e: any) {
+                setMessages(prev => [...prev, { role: 'assistant', content: `❌ Error: ${e.message}` }]);
+            }
+            return;
+        }
+
+        // /diff [file] - Show git diff
+        if (command === '/diff' || command.startsWith('/diff ')) {
+            const filePath = command.length > 5 ? command.slice(6).trim() : '';
+            try {
+                const { execSync } = await import('child_process');
+                const diffCmd = filePath ? `git diff "${filePath}"` : 'git diff --stat';
+                const output = execSync(diffCmd, { encoding: 'utf-8', cwd: process.cwd() });
+                const result = output.trim() || 'No changes';
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `📝 Diff${filePath ? `: ${filePath}` : ''}\n\`\`\`diff\n${result}\n\`\`\`` }]);
+            } catch (e: any) {
+                setMessages(prev => [...prev, { role: 'user', content: value }, { role: 'assistant', content: `❌ Error: ${e.message}` }]);
+            }
             return;
         }
 
@@ -197,7 +361,7 @@ export const useChat = () => {
         try {
             // Parse for @files
             const fileTokens = value.match(/@(\S+)/g) || [];
-            let contextualMessages = [...messages, userMsg];
+            let localHistory: Message[] = [...messages, userMsg];
 
             if (fileTokens.length > 0) {
                 const filesData = fileTokens.map(token => {
@@ -224,71 +388,92 @@ export const useChat = () => {
                 });
 
                 const fileToon = ToonService.toToon({ files: filesData });
-
-                contextualMessages = [
+                localHistory = [
                     { role: 'system', content: `The user has provided the following file context in TOON format:\n\n${fileToon}` },
                     ...messages,
                     userMsg
                 ];
             }
 
-            const { fullStream } = await getAIStream(contextualMessages, selectedModel);
+            let iterations = 0;
+            const MAX_ITERATIONS = 10;
+            let shouldContinue = true;
 
-            // Add placeholder for the AI response
-            setMessages(prev => [...prev, { role: 'assistant', content: '', reasoning: '' }]);
+            while (shouldContinue && iterations < MAX_ITERATIONS) {
+                iterations++;
+                let currentAssistantMsg: Message = { role: 'assistant', content: '', reasoning: '', toolCalls: [] };
+                
+                const { fullStream } = await getAIStream(localHistory, selectedModel);
+                let hadToolCalls = false;
 
-            for await (const part of fullStream) {
-                switch (part.type) {
-                    case 'reasoning-delta':
-                        setMessages(prev => {
-                            const next = [...prev];
-                            const last = next[next.length - 1];
-                            if (last && last.role === 'assistant') {
-                                last.reasoning = (last.reasoning || '') + part.text;
+                for await (const part of fullStream) {
+                    switch (part.type) {
+                        case 'reasoning-delta':
+                            currentAssistantMsg.reasoning = (currentAssistantMsg.reasoning || '') + part.text;
+                            setMessages([...localHistory, currentAssistantMsg]);
+                            break;
+                        case 'text-delta':
+                            currentAssistantMsg.content = (currentAssistantMsg.content || '') + part.text;
+                            setMessages([...localHistory, currentAssistantMsg]);
+                            break;
+                        case 'tool-call':
+                            const toolPart = part as any;
+                            const toolArgs = toolPart.args || toolPart.input;
+                            currentAssistantMsg.toolCalls = [...(currentAssistantMsg.toolCalls || []), {
+                                toolCallId: toolPart.toolCallId,
+                                toolName: toolPart.toolName,
+                                args: toolArgs
+                            }];
+                            hadToolCalls = true;
+                            setMessages([...localHistory, currentAssistantMsg]);
+                            break;
+                    }
+                }
+
+                // Finalize assistant message in localHistory
+                localHistory.push(currentAssistantMsg);
+
+                if (hadToolCalls && currentAssistantMsg.toolCalls) {
+                    const toolResults: any[] = [];
+                    
+                    // Add "Executing tools..." status
+                    setMessages([...localHistory, { role: 'assistant', content: '⚙️ Executing tools...' }]);
+                    
+                    for (const tc of currentAssistantMsg.toolCalls) {
+                        const tool = toolRegistry.getTool(tc.toolName);
+                        if (tool) {
+                            try {
+                                const result = await (tool as any).execute(tc.args, { toolCallId: tc.toolCallId });
+                                toolResults.push({
+                                    toolCallId: tc.toolCallId,
+                                    toolName: tc.toolName,
+                                    result: result
+                                });
+                            } catch (e: any) {
+                                toolResults.push({
+                                    toolCallId: tc.toolCallId,
+                                    toolName: tc.toolName,
+                                    result: `ERROR: ${e.message}`
+                                });
                             }
-                            return next;
-                        });
-                        break;
-                    case 'text-delta':
-                        setMessages(prev => {
-                            const next = [...prev];
-                            const last = next[next.length - 1];
-                            if (last && last.role === 'assistant') {
-                                last.content = (last.content || '') + part.text;
-                            }
-                            return next;
-                        });
-                        break;
-                    case 'tool-call':
-                        setMessages(prev => {
-                            const next = [...prev];
-                            const last = next[next.length - 1];
-                            if (last && last.role === 'assistant') {
-                                const toolPart = part as any;
-                                const toolArgs = toolPart.args || toolPart.input;
-                                const toolInfo = `\n\n[🛠️ Tool Call: ${toolPart.toolName}]\n> Arguments: ${JSON.stringify(toolArgs)}\n`;
-                                last.content = (last.content || '') + toolInfo;
-                            }
-                            return next;
-                        });
-                        break;
-                    case 'tool-result':
-                        setMessages(prev => {
-                            const next = [...prev];
-                            const last = next[next.length - 1];
-                            if (last && last.role === 'assistant') {
-                                const toolPart = part as any;
-                                // Try multiple possible property names for the result
-                                const rawResult = toolPart.result ?? toolPart.output ?? toolPart.content ?? toolPart.data;
-                                const result = typeof rawResult === 'string' 
-                                    ? (rawResult.length > 500 ? rawResult.slice(0, 497) + '...' : rawResult)
-                                    : JSON.stringify(rawResult, null, 2);
-                                const resultInfo = `\n[✅ Tool Result: ${toolPart.toolName}]\n\`\`\`\n${result}\n\`\`\`\n`;
-                                last.content = (last.content || '') + resultInfo;
-                            }
-                            return next;
-                        });
-                        break;
+                        } else {
+                            toolResults.push({
+                                toolCallId: tc.toolCallId,
+                                toolName: tc.toolName,
+                                result: `ERROR: Tool '${tc.toolName}' not found.`
+                            });
+                        }
+                    }
+
+                    const toolResultMsg: Message = { role: 'tool', toolResults };
+                    localHistory.push(toolResultMsg);
+                    setMessages([...localHistory]);
+                    
+                    // Continue to next iteration so AI can see results
+                    shouldContinue = true;
+                } else {
+                    // No tool calls, we are done
+                    shouldContinue = false;
                 }
             }
         } catch (error: any) {

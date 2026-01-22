@@ -13,9 +13,16 @@ interface ChatInputProps {
 const COMMANDS = [
     { label: '/help', description: 'Show available commands' },
     { label: '/login', description: 'Sign in to your account' },
+    { label: '/logout', description: 'Sign out of your account' },
     { label: '/clear', description: 'Clear chat history' },
     { label: '/history', description: 'View past conversations' },
     { label: '/model', description: 'Switch AI model' },
+    { label: '/view', description: 'View file with line numbers' },
+    { label: '/search', description: 'Search in files' },
+    { label: '/status', description: 'Show git status' },
+    { label: '/diff', description: 'Show git diff' },
+    { label: '/init', description: 'Generate AGENTS.md' },
+    { label: '/metrics', description: 'Show session stats' },
     { label: '/exit', description: 'Exit the application' },
 ];
 
@@ -39,10 +46,8 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({ onSubmit, isLog
         ? files.filter(f => f.toLowerCase().startsWith(currentFileFilter.toLowerCase()))
         : [], [showFileDropdown, files, currentFileFilter]);
 
-    // Prioritize file dropdown if active, otherwise command dropdown
     const isDropdownVisible = (showCommandDropdown && filteredCommands.length > 0) || (showFileDropdown && filteredFiles.length > 0);
 
-    // Determine which list to use for navigation
     const activeList = showFileDropdown ? filteredFiles : filteredCommands;
     const activeListLength = activeList.length;
 
@@ -50,7 +55,6 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({ onSubmit, isLog
         if (showFileDropdown) {
             try {
                 const allFiles = fs.readdirSync(process.cwd());
-                // Add directories with trailing slash
                 const formattedFiles = allFiles.map(f => {
                     try {
                         const stat = fs.statSync(path.join(process.cwd(), f));
@@ -97,7 +101,6 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({ onSubmit, isLog
         }
     };
 
-    // Reset selection when input changes or filtered list changes
     useEffect(() => {
         setSelectedIndex(0);
     }, [input, showFileDropdown, showCommandDropdown]);

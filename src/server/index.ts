@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { Pool } from "pg";
 import { auth } from "../lib/auth.ts";
 import { authService } from "../services/auth/authService.ts";
+import { authInitiateLimiter, authPollLimiter, authValidateLimiter } from "../middleware/rateLimiter.ts";
 
 const app = new Hono();
 
@@ -15,13 +16,14 @@ app.use("*", cors({
     origin: ["http://localhost:3000"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
-    exposeHeaders: ["Content-Length", "X-Kuma-Revision"],
+    exposeHeaders: ["Content-Length", "X-Kuma-Revision", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
     credentials: true,
 }));
 
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 
-app.post("/custom/auth/initiate", async (c) => {
+// Apply rate limiters to auth endpoints
+app.post("/custom/auth/initiate", authInitiateLimiter, async (c) => {
     const code = await authService.generateCode();
     return c.json({
         code,
@@ -48,7 +50,7 @@ app.post("/custom/auth/verify", async (c) => {
     return c.json({ success: false, error: "Invalid code or already used" }, 400);
 });
 
-app.get("/custom/auth/poll", async (c) => {
+app.get("/custom/auth/poll", authPollLimiter, async (c) => {
     const code = c.req.query("code");
     if (!code) return c.json({ error: "No code provided" }, 400);
 
@@ -63,7 +65,7 @@ app.get("/custom/auth/poll", async (c) => {
     return c.json({ authenticated: false });
 });
 
-app.post("/custom/auth/validate", async (c) => {
+app.post("/custom/auth/validate", authValidateLimiter, async (c) => {
     const { sessionToken } = await c.req.json();
     if (!sessionToken) {
         return c.json({ valid: false, error: "No session token provided" }, 400);

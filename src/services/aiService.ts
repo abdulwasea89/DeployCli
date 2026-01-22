@@ -2,35 +2,58 @@ import { streamText } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { Message } from '../types/chat.ts';
 import { APP_CONFIG } from '../../config/constants.ts';
-import * as tools from './tools/FileTools.ts';
+import { toolRegistry } from './tools/ToolRegistry.ts';
+import { metrics } from './metrics.ts';
+
+// Force Tool Registration (Imports are needed to trigger static initialization)
+import './tools/FileTools.ts';
 
 export const getAIStream = async (messages: Message[], modelName?: string) => {
-    return streamText({
-        model: groq(modelName || APP_CONFIG.DEFAULT_MODEL),
-        system: APP_CONFIG.PROMPTS.SYSTEM + `
-- Use tools for file analysis, editing, and execution.
-- Use 'readFile' for peeking, 'writeFile' to create/overwrite files, 'edit' for small changes.
-- Use 'bash' for commands, 'todowrite' to track tasks and 'question' for clarification.
-- ALWAYS verify file contents before editing.`,
-        messages: messages.map(m => ({ role: m.role, content: m.content })),
-        tools: {
-            readFile: tools.readFile,
-            writeFile: tools.writeFile,
-            read: tools.read, // Compatibility alias
-            grep: tools.grep,
-            list: tools.list,
-            find: tools.find,
-            bash: tools.bash,
-            edit: tools.edit,
-            skill: tools.skill,
-            todowrite: tools.todowrite,
-            question: tools.question
-        },
-        maxSteps: 10,
-        providerOptions: {
-            groq: {
-                reasoningFormat: 'parsed'
+    const model = modelName || APP_CONFIG.DEFAULT_MODEL;
+    const startTime = Date.now();
+    
+    try {
+        const stream = streamText({
+            model: groq(model),
+            system: APP_CONFIG.PROMPTS.SYSTEM,
+            messages: messages.map(m => {
+                if (m.role === 'tool') {
+                    return {
+                        role: 'tool',
+                        content: m.toolResults?.map(tr => ({
+                            type: 'tool-result',
+                            toolCallId: tr.toolCallId,
+                            toolName: tr.toolName,
+                            result: tr.result
+                        }))
+                    } as any;
+                }
+                return { 
+                    role: m.role as any, 
+                    content: m.content || '',
+                    ...(m.toolCalls ? { toolCalls: m.toolCalls.map(tc => ({
+                        type: 'function',
+                        id: tc.toolCallId,
+                        function: { name: tc.toolName, arguments: JSON.stringify(tc.args) }
+                    })) } : {}),
+                };
+            }),
+            tools: toolRegistry.getTools(),
+            maxSteps: 10,
+            providerOptions: {
+                groq: {
+                    reasoningFormat: 'parsed'
+                }
             }
-        }
-    } as any);
+        } as any);
+        
+        // Record metrics (estimate tokens from message length)
+        const estimatedTokens = messages.reduce((sum, m) => sum + Math.ceil((m.content || '').length / 4), 0);
+        metrics.recordAICall(model, Date.now() - startTime, estimatedTokens);
+        
+        return stream;
+    } catch (error) {
+        metrics.recordAICall(model, Date.now() - startTime, 0, true);
+        throw error;
+    }
 };

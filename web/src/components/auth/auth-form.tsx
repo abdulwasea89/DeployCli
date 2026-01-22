@@ -73,11 +73,11 @@ export function AuthForm({ code, onAuthSuccess }: { code?: string, onAuthSuccess
                     <TabsContent value="login" className="space-y-4 pt-4">
                         <div className="space-y-2">
                             <Label htmlFor="email-login">Email</Label>
-                            <Input id="email-login" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input id="email-login" type="email" placeholder="m@example.com" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password-login">Password</Label>
-                            <Input id="password-login" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <Input id="password-login" type="password" value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)} />
                         </div>
                         {error && <p className="text-sm text-red-500">{error}</p>}
                         <Button className="w-full" onClick={handleSignIn} disabled={isLoading}>
@@ -88,15 +88,15 @@ export function AuthForm({ code, onAuthSuccess }: { code?: string, onAuthSuccess
                     <TabsContent value="signup" className="space-y-4 pt-4">
                         <div className="space-y-2">
                             <Label htmlFor="name">Name</Label>
-                            <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} />
+                            <Input id="name" placeholder="John Doe" value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email-signup">Email</Label>
-                            <Input id="email-signup" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input id="email-signup" type="email" placeholder="m@example.com" value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password-signup">Password</Label>
-                            <Input id="password-signup" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <Input id="password-signup" type="password" value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)} />
                         </div>
                         {error && <p className="text-sm text-red-500">{error}</p>}
                         <Button className="w-full" onClick={handleSignUp} disabled={isLoading}>
